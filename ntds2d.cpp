@@ -49,53 +49,30 @@ static InstancingResources gInstancing = {false};
 
 // OpenGL extension function pointers for systems with only GL 1.1 headers
 static bool gExtensionsLoaded = false;
-static PFNGLCREATESHADERPROC           glCreateShader_ptr           = nullptr;
-static PFNGLSHADERSOURCEPROC           glShaderSource_ptr           = nullptr;
-static PFNGLCOMPILESHADERPROC          glCompileShader_ptr          = nullptr;
-static PFNGLCREATEPROGRAMPROC          glCreateProgram_ptr          = nullptr;
-static PFNGLATTACHSHADERPROC           glAttachShader_ptr           = nullptr;
-static PFNGLLINKPROGRAMPROC            glLinkProgram_ptr            = nullptr;
-static PFNGLDELETESHADERPROC           glDeleteShader_ptr           = nullptr;
-static PFNGLUSEPROGRAMPROC             glUseProgram_ptr             = nullptr;
-static PFNGLACTIVETEXTUREPROC          glActiveTexture_ptr          = nullptr;
-static PFNGLGETUNIFORMLOCATIONPROC     glGetUniformLocation_ptr     = nullptr;
-static PFNGLUNIFORM1IPROC              glUniform1i_ptr              = nullptr;
-static PFNGLGENVERTEXARRAYSPROC        glGenVertexArrays_ptr        = nullptr;
-static PFNGLBINDVERTEXARRAYPROC        glBindVertexArray_ptr        = nullptr;
-static PFNGLGENBUFFERSPROC             glGenBuffers_ptr             = nullptr;
-static PFNGLBINDBUFFERPROC             glBindBuffer_ptr             = nullptr;
-static PFNGLBUFFERDATAPROC             glBufferData_ptr             = nullptr;
-static PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray_ptr = nullptr;
-static PFNGLVERTEXATTRIBPOINTERPROC    glVertexAttribPointer_ptr    = nullptr;
-static PFNGLVERTEXATTRIBDIVISORPROC    glVertexAttribDivisor_ptr    = nullptr;
-static PFNGLVERTEXATTRIBIPOINTERPROC   glVertexAttribIPointer_ptr   = nullptr;
-static PFNGLDRAWARRAYSINSTANCEDPROC    glDrawArraysInstanced_ptr    = nullptr;
-static PFNGLTEXIMAGE3DPROC             glTexImage3D_ptr             = nullptr;
-static PFNGLTEXSUBIMAGE3DPROC          glTexSubImage3D_ptr          = nullptr;
+static PFNGLCREATESHADERPROC           pglCreateShader           = nullptr;
+static PFNGLSHADERSOURCEPROC           pglShaderSource           = nullptr;
+static PFNGLCOMPILESHADERPROC          pglCompileShader          = nullptr;
+static PFNGLCREATEPROGRAMPROC          pglCreateProgram          = nullptr;
+static PFNGLATTACHSHADERPROC           pglAttachShader           = nullptr;
+static PFNGLLINKPROGRAMPROC            pglLinkProgram            = nullptr;
+static PFNGLDELETESHADERPROC           pglDeleteShader           = nullptr;
+static PFNGLUSEPROGRAMPROC             pglUseProgram             = nullptr;
+static PFNGLACTIVETEXTUREPROC          pglActiveTexture          = nullptr;
+static PFNGLGETUNIFORMLOCATIONPROC     pglGetUniformLocation     = nullptr;
+static PFNGLUNIFORM1IPROC              pglUniform1i              = nullptr;
+static PFNGLGENVERTEXARRAYSPROC        pglGenVertexArrays        = nullptr;
+static PFNGLBINDVERTEXARRAYPROC        pglBindVertexArray        = nullptr;
+static PFNGLGENBUFFERSPROC             pglGenBuffers             = nullptr;
+static PFNGLBINDBUFFERPROC             pglBindBuffer             = nullptr;
+static PFNGLBUFFERDATAPROC             pglBufferData             = nullptr;
+static PFNGLENABLEVERTEXATTRIBARRAYPROC pglEnableVertexAttribArray = nullptr;
+static PFNGLVERTEXATTRIBPOINTERPROC    pglVertexAttribPointer    = nullptr;
+static PFNGLVERTEXATTRIBDIVISORPROC    pglVertexAttribDivisor    = nullptr;
+static PFNGLVERTEXATTRIBIPOINTERPROC   pglVertexAttribIPointer   = nullptr;
+static PFNGLDRAWARRAYSINSTANCEDPROC    pglDrawArraysInstanced    = nullptr;
+static PFNGLTEXIMAGE3DPROC             pglTexImage3D             = nullptr;
+static PFNGLTEXSUBIMAGE3DPROC          pglTexSubImage3D          = nullptr;
 
-#define glCreateShader           glCreateShader_ptr
-#define glShaderSource           glShaderSource_ptr
-#define glCompileShader          glCompileShader_ptr
-#define glCreateProgram          glCreateProgram_ptr
-#define glAttachShader           glAttachShader_ptr
-#define glLinkProgram            glLinkProgram_ptr
-#define glDeleteShader           glDeleteShader_ptr
-#define glUseProgram             glUseProgram_ptr
-#define glActiveTexture          glActiveTexture_ptr
-#define glGetUniformLocation     glGetUniformLocation_ptr
-#define glUniform1i              glUniform1i_ptr
-#define glGenVertexArrays        glGenVertexArrays_ptr
-#define glBindVertexArray        glBindVertexArray_ptr
-#define glGenBuffers             glGenBuffers_ptr
-#define glBindBuffer             glBindBuffer_ptr
-#define glBufferData             glBufferData_ptr
-#define glEnableVertexAttribArray glEnableVertexAttribArray_ptr
-#define glVertexAttribPointer    glVertexAttribPointer_ptr
-#define glVertexAttribDivisor    glVertexAttribDivisor_ptr
-#define glVertexAttribIPointer   glVertexAttribIPointer_ptr
-#define glDrawArraysInstanced    glDrawArraysInstanced_ptr
-#define glTexImage3D             glTexImage3D_ptr
-#define glTexSubImage3D          glTexSubImage3D_ptr
 
 static void LoadGLExtensions()
 {
@@ -106,29 +83,29 @@ static void LoadGLExtensions()
     #define LOAD_PROC(type, name) name = (type)glXGetProcAddressARB((const GLubyte*)#name);
 #endif
 
-    LOAD_PROC(PFNGLTEXIMAGE3DPROC, glTexImage3D);
-    LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, glTexSubImage3D);
-    LOAD_PROC(PFNGLCREATESHADERPROC, glCreateShader);
-    LOAD_PROC(PFNGLSHADERSOURCEPROC, glShaderSource);
-    LOAD_PROC(PFNGLCOMPILESHADERPROC, glCompileShader);
-    LOAD_PROC(PFNGLCREATEPROGRAMPROC, glCreateProgram);
-    LOAD_PROC(PFNGLATTACHSHADERPROC, glAttachShader);
-    LOAD_PROC(PFNGLLINKPROGRAMPROC, glLinkProgram);
-    LOAD_PROC(PFNGLDELETESHADERPROC, glDeleteShader);
-    LOAD_PROC(PFNGLUSEPROGRAMPROC, glUseProgram);
-    LOAD_PROC(PFNGLACTIVETEXTUREPROC, glActiveTexture);
-    LOAD_PROC(PFNGLGETUNIFORMLOCATIONPROC, glGetUniformLocation);
-    LOAD_PROC(PFNGLUNIFORM1IPROC, glUniform1i);
-    LOAD_PROC(PFNGLGENVERTEXARRAYSPROC, glGenVertexArrays);
-    LOAD_PROC(PFNGLBINDVERTEXARRAYPROC, glBindVertexArray);
-    LOAD_PROC(PFNGLGENBUFFERSPROC, glGenBuffers);
-    LOAD_PROC(PFNGLBINDBUFFERPROC, glBindBuffer);
-    LOAD_PROC(PFNGLBUFFERDATAPROC, glBufferData);
-    LOAD_PROC(PFNGLENABLEVERTEXATTRIBARRAYPROC, glEnableVertexAttribArray);
-    LOAD_PROC(PFNGLVERTEXATTRIBPOINTERPROC, glVertexAttribPointer);
-    LOAD_PROC(PFNGLVERTEXATTRIBDIVISORPROC, glVertexAttribDivisor);
-    LOAD_PROC(PFNGLVERTEXATTRIBIPOINTERPROC, glVertexAttribIPointer);
-    LOAD_PROC(PFNGLDRAWARRAYSINSTANCEDPROC, glDrawArraysInstanced);
+    LOAD_PROC(PFNGLTEXIMAGE3DPROC, pglTexImage3D);
+    LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, pglTexSubImage3D);
+    LOAD_PROC(PFNGLCREATESHADERPROC, pglCreateShader);
+    LOAD_PROC(PFNGLSHADERSOURCEPROC, pglShaderSource);
+    LOAD_PROC(PFNGLCOMPILESHADERPROC, pglCompileShader);
+    LOAD_PROC(PFNGLCREATEPROGRAMPROC, pglCreateProgram);
+    LOAD_PROC(PFNGLATTACHSHADERPROC, pglAttachShader);
+    LOAD_PROC(PFNGLLINKPROGRAMPROC, pglLinkProgram);
+    LOAD_PROC(PFNGLDELETESHADERPROC, pglDeleteShader);
+    LOAD_PROC(PFNGLUSEPROGRAMPROC, pglUseProgram);
+    LOAD_PROC(PFNGLACTIVETEXTUREPROC, pglActiveTexture);
+    LOAD_PROC(PFNGLGETUNIFORMLOCATIONPROC, pglGetUniformLocation);
+    LOAD_PROC(PFNGLUNIFORM1IPROC, pglUniform1i);
+    LOAD_PROC(PFNGLGENVERTEXARRAYSPROC, pglGenVertexArrays);
+    LOAD_PROC(PFNGLBINDVERTEXARRAYPROC, pglBindVertexArray);
+    LOAD_PROC(PFNGLGENBUFFERSPROC, pglGenBuffers);
+    LOAD_PROC(PFNGLBINDBUFFERPROC, pglBindBuffer);
+    LOAD_PROC(PFNGLBUFFERDATAPROC, pglBufferData);
+    LOAD_PROC(PFNGLENABLEVERTEXATTRIBARRAYPROC, pglEnableVertexAttribArray);
+    LOAD_PROC(PFNGLVERTEXATTRIBPOINTERPROC, pglVertexAttribPointer);
+    LOAD_PROC(PFNGLVERTEXATTRIBDIVISORPROC, pglVertexAttribDivisor);
+    LOAD_PROC(PFNGLVERTEXATTRIBIPOINTERPROC, pglVertexAttribIPointer);
+    LOAD_PROC(PFNGLDRAWARRAYSINSTANCEDPROC, pglDrawArraysInstanced);
     #undef LOAD_PROC
     gExtensionsLoaded = true;
 }
@@ -164,7 +141,7 @@ int MakeAirplaneImages(void)
         glGenTextures(NUM_SPRITES, TextureSpites);
         glGenTextures(1, &TextureSpriteArray);
         glBindTexture(GL_TEXTURE_2D_ARRAY, TextureSpriteArray);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, hasAlpha ? GL_RGBA : GL_RGB,
+        pglTexImage3D(GL_TEXTURE_2D_ARRAY, 0, hasAlpha ? GL_RGBA : GL_RGB,
                      SPRITE_WIDTH, SPRITE_HEIGHT, NUM_SPRITES, 0,
                      hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -195,7 +172,7 @@ int MakeAirplaneImages(void)
                                    SpriteTexture);
 
         glBindTexture(GL_TEXTURE_2D_ARRAY, TextureSpriteArray);
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, NumSprites,
+        pglTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, NumSprites,
                         SPRITE_WIDTH, SPRITE_HEIGHT, 1,
                         hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
                         SpriteTexture);
@@ -388,9 +365,9 @@ void DrawAirplaneImage(float x, float y,float scale,float heading,int imageNum)
 
 static GLuint CompileShader(GLenum type, const char* src)
 {
-    GLuint sh = glCreateShader(type);
-    glShaderSource(sh, 1, &src, NULL);
-    glCompileShader(sh);
+    GLuint sh = pglCreateShader(type);
+    pglShaderSource(sh, 1, &src, NULL);
+    pglCompileShader(sh);
     return sh;
 }
 
@@ -398,12 +375,12 @@ static GLuint CreateProgram(const char* vs, const char* fs)
 {
     GLuint v = CompileShader(GL_VERTEX_SHADER, vs);
     GLuint f = CompileShader(GL_FRAGMENT_SHADER, fs);
-    GLuint p = glCreateProgram();
-    glAttachShader(p, v);
-    glAttachShader(p, f);
-    glLinkProgram(p);
-    glDeleteShader(v);
-    glDeleteShader(f);
+    GLuint p = pglCreateProgram();
+    pglAttachShader(p, v);
+    pglAttachShader(p, f);
+    pglLinkProgram(p);
+    pglDeleteShader(v);
+    pglDeleteShader(f);
     return p;
 }
 
@@ -454,40 +431,40 @@ void InitAirplaneInstancing()
         1.0f,-1.0f, 1.0f, 0.0f
     };
 
-    glGenVertexArrays(1, &gInstancing.vao);
-    glBindVertexArray(gInstancing.vao);
+    pglGenVertexArrays(1, &gInstancing.vao);
+    pglBindVertexArray(gInstancing.vao);
 
-    glGenBuffers(1, &gInstancing.quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, gInstancing.quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)(2*sizeof(float)));
+    pglGenBuffers(1, &gInstancing.quadVBO);
+    pglBindBuffer(GL_ARRAY_BUFFER, gInstancing.quadVBO);
+    pglBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    pglEnableVertexAttribArray(0);
+    pglVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+    pglEnableVertexAttribArray(1);
+    pglVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)(2*sizeof(float)));
 
-    glGenBuffers(1, &gInstancing.instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, gInstancing.instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STREAM_DRAW);
+    pglGenBuffers(1, &gInstancing.instanceVBO);
+    pglBindBuffer(GL_ARRAY_BUFFER, gInstancing.instanceVBO);
+    pglBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STREAM_DRAW);
 
     size_t stride = sizeof(AirplaneInstance);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, x));
-    glVertexAttribDivisor(2,1);
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, scale));
-    glVertexAttribDivisor(3,1);
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, heading));
-    glVertexAttribDivisor(4,1);
-    glEnableVertexAttribArray(5);
-    glVertexAttribIPointer(5, 1, GL_INT, stride, (void*)offsetof(AirplaneInstance, imageNum));
-    glVertexAttribDivisor(5,1);
-    glEnableVertexAttribArray(6);
-    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, color));
-    glVertexAttribDivisor(6,1);
+    pglEnableVertexAttribArray(2);
+    pglVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, x));
+    pglVertexAttribDivisor(2,1);
+    pglEnableVertexAttribArray(3);
+    pglVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, scale));
+    pglVertexAttribDivisor(3,1);
+    pglEnableVertexAttribArray(4);
+    pglVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, heading));
+    pglVertexAttribDivisor(4,1);
+    pglEnableVertexAttribArray(5);
+    pglVertexAttribIPointer(5, 1, GL_INT, stride, (void*)offsetof(AirplaneInstance, imageNum));
+    pglVertexAttribDivisor(5,1);
+    pglEnableVertexAttribArray(6);
+    pglVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(AirplaneInstance, color));
+    pglVertexAttribDivisor(6,1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    pglBindBuffer(GL_ARRAY_BUFFER, 0);
+    pglBindVertexArray(0);
 
     gInstancing.initialized = true;
 }
@@ -498,20 +475,20 @@ void DrawAirplaneImagesInstanced(const std::vector<AirplaneInstance>& instances)
     if(!gInstancing.initialized)
         InitAirplaneInstancing();
 
-    glBindVertexArray(gInstancing.vao);
-    glBindBuffer(GL_ARRAY_BUFFER, gInstancing.instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, instances.size()*sizeof(AirplaneInstance), instances.data(), GL_STREAM_DRAW);
+    pglBindVertexArray(gInstancing.vao);
+    pglBindBuffer(GL_ARRAY_BUFFER, gInstancing.instanceVBO);
+    pglBufferData(GL_ARRAY_BUFFER, instances.size()*sizeof(AirplaneInstance), instances.data(), GL_STREAM_DRAW);
 
-    glUseProgram(gInstancing.program);
-    glActiveTexture(GL_TEXTURE0);
+    pglUseProgram(gInstancing.program);
+    pglActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, TextureSpriteArray);
-    glUniform1i(glGetUniformLocation(gInstancing.program, "spriteTex"), 0);
+    pglUniform1i(pglGetUniformLocation(gInstancing.program, "spriteTex"), 0);
 
-    glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances.size());
+    pglDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances.size());
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
+    pglBindVertexArray(0);
+    pglUseProgram(0);
 }
 //---------------------------------------------------------------------------
 void DrawAirTrackFriend(float x, float y)
