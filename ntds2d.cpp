@@ -49,33 +49,53 @@ static InstancingResources gInstancing = {false};
 
 // OpenGL extension function pointers for systems with only GL 1.1 headers
 static bool gExtensionsLoaded = false;
-#ifndef GL_VERSION_2_0
-static PFNGLCREATESHADERPROC           glCreateShader           = nullptr;
-static PFNGLSHADERSOURCEPROC           glShaderSource           = nullptr;
-static PFNGLCOMPILESHADERPROC          glCompileShader          = nullptr;
-static PFNGLCREATEPROGRAMPROC          glCreateProgram          = nullptr;
-static PFNGLATTACHSHADERPROC           glAttachShader           = nullptr;
-static PFNGLLINKPROGRAMPROC            glLinkProgram            = nullptr;
-static PFNGLDELETESHADERPROC           glDeleteShader           = nullptr;
-static PFNGLUSEPROGRAMPROC             glUseProgram             = nullptr;
-static PFNGLACTIVETEXTUREPROC          glActiveTexture          = nullptr;
-static PFNGLGETUNIFORMLOCATIONPROC     glGetUniformLocation     = nullptr;
-static PFNGLUNIFORM1IPROC              glUniform1i              = nullptr;
-static PFNGLGENVERTEXARRAYSPROC        glGenVertexArrays        = nullptr;
-static PFNGLBINDVERTEXARRAYPROC        glBindVertexArray        = nullptr;
-static PFNGLGENBUFFERSPROC             glGenBuffers             = nullptr;
-static PFNGLBINDBUFFERPROC             glBindBuffer             = nullptr;
-static PFNGLBUFFERDATAPROC             glBufferData             = nullptr;
-static PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
-static PFNGLVERTEXATTRIBPOINTERPROC    glVertexAttribPointer    = nullptr;
-static PFNGLVERTEXATTRIBDIVISORPROC    glVertexAttribDivisor    = nullptr;
-static PFNGLVERTEXATTRIBIPOINTERPROC   glVertexAttribIPointer   = nullptr;
-static PFNGLDRAWARRAYSINSTANCEDPROC    glDrawArraysInstanced    = nullptr;
-#endif
-#ifndef GL_VERSION_1_2
-static PFNGLTEXIMAGE3DPROC             glTexImage3D             = nullptr;
-static PFNGLTEXSUBIMAGE3DPROC          glTexSubImage3D          = nullptr;
-#endif
+static PFNGLCREATESHADERPROC           glCreateShader_ptr           = nullptr;
+static PFNGLSHADERSOURCEPROC           glShaderSource_ptr           = nullptr;
+static PFNGLCOMPILESHADERPROC          glCompileShader_ptr          = nullptr;
+static PFNGLCREATEPROGRAMPROC          glCreateProgram_ptr          = nullptr;
+static PFNGLATTACHSHADERPROC           glAttachShader_ptr           = nullptr;
+static PFNGLLINKPROGRAMPROC            glLinkProgram_ptr            = nullptr;
+static PFNGLDELETESHADERPROC           glDeleteShader_ptr           = nullptr;
+static PFNGLUSEPROGRAMPROC             glUseProgram_ptr             = nullptr;
+static PFNGLACTIVETEXTUREPROC          glActiveTexture_ptr          = nullptr;
+static PFNGLGETUNIFORMLOCATIONPROC     glGetUniformLocation_ptr     = nullptr;
+static PFNGLUNIFORM1IPROC              glUniform1i_ptr              = nullptr;
+static PFNGLGENVERTEXARRAYSPROC        glGenVertexArrays_ptr        = nullptr;
+static PFNGLBINDVERTEXARRAYPROC        glBindVertexArray_ptr        = nullptr;
+static PFNGLGENBUFFERSPROC             glGenBuffers_ptr             = nullptr;
+static PFNGLBINDBUFFERPROC             glBindBuffer_ptr             = nullptr;
+static PFNGLBUFFERDATAPROC             glBufferData_ptr             = nullptr;
+static PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray_ptr = nullptr;
+static PFNGLVERTEXATTRIBPOINTERPROC    glVertexAttribPointer_ptr    = nullptr;
+static PFNGLVERTEXATTRIBDIVISORPROC    glVertexAttribDivisor_ptr    = nullptr;
+static PFNGLVERTEXATTRIBIPOINTERPROC   glVertexAttribIPointer_ptr   = nullptr;
+static PFNGLDRAWARRAYSINSTANCEDPROC    glDrawArraysInstanced_ptr    = nullptr;
+static PFNGLTEXIMAGE3DPROC             glTexImage3D_ptr             = nullptr;
+static PFNGLTEXSUBIMAGE3DPROC          glTexSubImage3D_ptr          = nullptr;
+
+#define glCreateShader           glCreateShader_ptr
+#define glShaderSource           glShaderSource_ptr
+#define glCompileShader          glCompileShader_ptr
+#define glCreateProgram          glCreateProgram_ptr
+#define glAttachShader           glAttachShader_ptr
+#define glLinkProgram            glLinkProgram_ptr
+#define glDeleteShader           glDeleteShader_ptr
+#define glUseProgram             glUseProgram_ptr
+#define glActiveTexture          glActiveTexture_ptr
+#define glGetUniformLocation     glGetUniformLocation_ptr
+#define glUniform1i              glUniform1i_ptr
+#define glGenVertexArrays        glGenVertexArrays_ptr
+#define glBindVertexArray        glBindVertexArray_ptr
+#define glGenBuffers             glGenBuffers_ptr
+#define glBindBuffer             glBindBuffer_ptr
+#define glBufferData             glBufferData_ptr
+#define glEnableVertexAttribArray glEnableVertexAttribArray_ptr
+#define glVertexAttribPointer    glVertexAttribPointer_ptr
+#define glVertexAttribDivisor    glVertexAttribDivisor_ptr
+#define glVertexAttribIPointer   glVertexAttribIPointer_ptr
+#define glDrawArraysInstanced    glDrawArraysInstanced_ptr
+#define glTexImage3D             glTexImage3D_ptr
+#define glTexSubImage3D          glTexSubImage3D_ptr
 
 static void LoadGLExtensions()
 {
@@ -86,11 +106,8 @@ static void LoadGLExtensions()
     #define LOAD_PROC(type, name) name = (type)glXGetProcAddressARB((const GLubyte*)#name);
 #endif
 
-#ifndef GL_VERSION_1_2
     LOAD_PROC(PFNGLTEXIMAGE3DPROC, glTexImage3D);
     LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, glTexSubImage3D);
-#endif
-#ifndef GL_VERSION_2_0
     LOAD_PROC(PFNGLCREATESHADERPROC, glCreateShader);
     LOAD_PROC(PFNGLSHADERSOURCEPROC, glShaderSource);
     LOAD_PROC(PFNGLCOMPILESHADERPROC, glCompileShader);
@@ -112,7 +129,6 @@ static void LoadGLExtensions()
     LOAD_PROC(PFNGLVERTEXATTRIBDIVISORPROC, glVertexAttribDivisor);
     LOAD_PROC(PFNGLVERTEXATTRIBIPOINTERPROC, glVertexAttribIPointer);
     LOAD_PROC(PFNGLDRAWARRAYSINSTANCEDPROC, glDrawArraysInstanced);
-#endif
     #undef LOAD_PROC
     gExtensionsLoaded = true;
 }
