@@ -47,10 +47,81 @@ struct InstancingResources {
 
 static InstancingResources gInstancing = {false};
 
+// OpenGL extension function pointers for systems with only GL 1.1 headers
+static bool gExtensionsLoaded = false;
+#ifndef GL_VERSION_2_0
+static PFNGLCREATESHADERPROC           glCreateShader           = nullptr;
+static PFNGLSHADERSOURCEPROC           glShaderSource           = nullptr;
+static PFNGLCOMPILESHADERPROC          glCompileShader          = nullptr;
+static PFNGLCREATEPROGRAMPROC          glCreateProgram          = nullptr;
+static PFNGLATTACHSHADERPROC           glAttachShader           = nullptr;
+static PFNGLLINKPROGRAMPROC            glLinkProgram            = nullptr;
+static PFNGLDELETESHADERPROC           glDeleteShader           = nullptr;
+static PFNGLUSEPROGRAMPROC             glUseProgram             = nullptr;
+static PFNGLACTIVETEXTUREPROC          glActiveTexture          = nullptr;
+static PFNGLGETUNIFORMLOCATIONPROC     glGetUniformLocation     = nullptr;
+static PFNGLUNIFORM1IPROC              glUniform1i              = nullptr;
+static PFNGLGENVERTEXARRAYSPROC        glGenVertexArrays        = nullptr;
+static PFNGLBINDVERTEXARRAYPROC        glBindVertexArray        = nullptr;
+static PFNGLGENBUFFERSPROC             glGenBuffers             = nullptr;
+static PFNGLBINDBUFFERPROC             glBindBuffer             = nullptr;
+static PFNGLBUFFERDATAPROC             glBufferData             = nullptr;
+static PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
+static PFNGLVERTEXATTRIBPOINTERPROC    glVertexAttribPointer    = nullptr;
+static PFNGLVERTEXATTRIBDIVISORPROC    glVertexAttribDivisor    = nullptr;
+static PFNGLVERTEXATTRIBIPOINTERPROC   glVertexAttribIPointer   = nullptr;
+static PFNGLDRAWARRAYSINSTANCEDPROC    glDrawArraysInstanced    = nullptr;
+#endif
+#ifndef GL_VERSION_1_2
+static PFNGLTEXIMAGE3DPROC             glTexImage3D             = nullptr;
+static PFNGLTEXSUBIMAGE3DPROC          glTexSubImage3D          = nullptr;
+#endif
+
+static void LoadGLExtensions()
+{
+    if (gExtensionsLoaded) return;
+#ifdef _WIN32
+    #define LOAD_PROC(type, name) name = (type)wglGetProcAddress(#name);
+#else
+    #define LOAD_PROC(type, name) name = (type)glXGetProcAddressARB((const GLubyte*)#name);
+#endif
+
+#ifndef GL_VERSION_1_2
+    LOAD_PROC(PFNGLTEXIMAGE3DPROC, glTexImage3D);
+    LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, glTexSubImage3D);
+#endif
+#ifndef GL_VERSION_2_0
+    LOAD_PROC(PFNGLCREATESHADERPROC, glCreateShader);
+    LOAD_PROC(PFNGLSHADERSOURCEPROC, glShaderSource);
+    LOAD_PROC(PFNGLCOMPILESHADERPROC, glCompileShader);
+    LOAD_PROC(PFNGLCREATEPROGRAMPROC, glCreateProgram);
+    LOAD_PROC(PFNGLATTACHSHADERPROC, glAttachShader);
+    LOAD_PROC(PFNGLLINKPROGRAMPROC, glLinkProgram);
+    LOAD_PROC(PFNGLDELETESHADERPROC, glDeleteShader);
+    LOAD_PROC(PFNGLUSEPROGRAMPROC, glUseProgram);
+    LOAD_PROC(PFNGLACTIVETEXTUREPROC, glActiveTexture);
+    LOAD_PROC(PFNGLGETUNIFORMLOCATIONPROC, glGetUniformLocation);
+    LOAD_PROC(PFNGLUNIFORM1IPROC, glUniform1i);
+    LOAD_PROC(PFNGLGENVERTEXARRAYSPROC, glGenVertexArrays);
+    LOAD_PROC(PFNGLBINDVERTEXARRAYPROC, glBindVertexArray);
+    LOAD_PROC(PFNGLGENBUFFERSPROC, glGenBuffers);
+    LOAD_PROC(PFNGLBINDBUFFERPROC, glBindBuffer);
+    LOAD_PROC(PFNGLBUFFERDATAPROC, glBufferData);
+    LOAD_PROC(PFNGLENABLEVERTEXATTRIBARRAYPROC, glEnableVertexAttribArray);
+    LOAD_PROC(PFNGLVERTEXATTRIBPOINTERPROC, glVertexAttribPointer);
+    LOAD_PROC(PFNGLVERTEXATTRIBDIVISORPROC, glVertexAttribDivisor);
+    LOAD_PROC(PFNGLVERTEXATTRIBIPOINTERPROC, glVertexAttribIPointer);
+    LOAD_PROC(PFNGLDRAWARRAYSINSTANCEDPROC, glDrawArraysInstanced);
+#endif
+    #undef LOAD_PROC
+    gExtensionsLoaded = true;
+}
+
 
 //---------------------------------------------------------------------------
 int MakeAirplaneImages(void)
 {
+    LoadGLExtensions();
 	bool hasAlpha=false;
 	const char filename[] = "..\\..\\Symbols\\sprites-RGBA.png";
 
@@ -322,6 +393,7 @@ static GLuint CreateProgram(const char* vs, const char* fs)
 
 void InitAirplaneInstancing()
 {
+    LoadGLExtensions();
     if(gInstancing.initialized) return;
 
     const char* vsSrc =
