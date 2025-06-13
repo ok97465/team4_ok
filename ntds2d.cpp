@@ -417,7 +417,7 @@ void InitAirplaneInstancing()
         "flat out int Image;\n"
         "void main(){\n"
         "  float rad = radians(-heading - 90.0);\n"
-        "  mat2 R = mat2(cos(rad), -sin(rad), sin(rad), cos(rad));\n"
+        "  mat2 R = mat2(cos(rad), sin(rad), -sin(rad), cos(rad));\n"
         "  vec2 p = pos + R * (vert * scale * 36.0);\n"
         "  vec2 ndc = vec2((p.x / Viewport.x) * 2.0 - 1.0, (p.y / Viewport.y) * 2.0 - 1.0);\n"
         "  gl_Position = vec4(ndc, 0.0, 1.0);\n"
