@@ -60,6 +60,7 @@ static PFNGLUSEPROGRAMPROC             pglUseProgram             = nullptr;
 static PFNGLACTIVETEXTUREPROC          pglActiveTexture          = nullptr;
 static PFNGLGETUNIFORMLOCATIONPROC     pglGetUniformLocation     = nullptr;
 static PFNGLUNIFORM1IPROC              pglUniform1i              = nullptr;
+static PFNGLUNIFORM2FPROC              pglUniform2f              = nullptr;
 static PFNGLGENVERTEXARRAYSPROC        pglGenVertexArrays        = nullptr;
 static PFNGLBINDVERTEXARRAYPROC        pglBindVertexArray        = nullptr;
 static PFNGLGENBUFFERSPROC             pglGenBuffers             = nullptr;
@@ -107,6 +108,7 @@ static void LoadGLExtensions()
     LOAD_PROC(PFNGLACTIVETEXTUREPROC, pglActiveTexture);
     LOAD_PROC(PFNGLGETUNIFORMLOCATIONPROC, pglGetUniformLocation);
     LOAD_PROC(PFNGLUNIFORM1IPROC, pglUniform1i);
+    LOAD_PROC(PFNGLUNIFORM2FPROC, pglUniform2f);
     LOAD_PROC(PFNGLGENVERTEXARRAYSPROC, pglGenVertexArrays);
     LOAD_PROC(PFNGLBINDVERTEXARRAYPROC, pglBindVertexArray);
     LOAD_PROC(PFNGLGENBUFFERSPROC, pglGenBuffers);
@@ -409,6 +411,7 @@ void InitAirplaneInstancing()
         "layout(location=4) in float heading;\n"
         "layout(location=5) in int image;\n"
         "layout(location=6) in vec4 color;\n"
+        "uniform vec2 Viewport;\n"
         "out vec2 Tex;\n"
         "out vec4 Color;\n"
         "flat out int Image;\n"
@@ -416,7 +419,8 @@ void InitAirplaneInstancing()
         "  float rad = radians(-heading - 90.0);\n"
         "  mat2 R = mat2(cos(rad), -sin(rad), sin(rad), cos(rad));\n"
         "  vec2 p = pos + R * (vert * scale * 36.0);\n"
-        "  gl_Position = vec4(p, 0.0, 1.0);\n"
+        "  vec2 ndc = vec2((p.x / Viewport.x) * 2.0 - 1.0, (p.y / Viewport.y) * 2.0 - 1.0);\n"
+        "  gl_Position = vec4(ndc, 0.0, 1.0);\n"
         "  Tex = uv;\n"
         "  Color = color;\n"
         "  Image = image;\n"
@@ -491,6 +495,9 @@ void DrawAirplaneImagesInstanced(const std::vector<AirplaneInstance>& instances)
     pglBufferData(GL_ARRAY_BUFFER, instances.size()*sizeof(AirplaneInstance), instances.data(), GL_STREAM_DRAW);
 
     pglUseProgram(gInstancing.program);
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    pglUniform2f(pglGetUniformLocation(gInstancing.program, "Viewport"), (float)vp[2], (float)vp[3]);
     pglActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, TextureSpriteArray);
     pglUniform1i(pglGetUniformLocation(gInstancing.program, "spriteTex"), 0);
