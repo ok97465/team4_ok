@@ -92,7 +92,7 @@ static void *GetAnyGLFuncAddress(const char *name)
 static void LoadGLExtensions()
 {
     if (gExtensionsLoaded) return;
-#define LOAD_PROC(type, name) name = (type)GetAnyGLFuncAddress(#name);
+#define LOAD_PROC(type, name) name = (type)GetAnyGLFuncAddress(#name + 1);
 
     LOAD_PROC(PFNGLTEXIMAGE3DPROC, pglTexImage3D);
     LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, pglTexSubImage3D);
