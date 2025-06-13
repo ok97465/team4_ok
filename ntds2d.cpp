@@ -74,14 +74,25 @@ static PFNGLTEXIMAGE3DPROC             pglTexImage3D             = nullptr;
 static PFNGLTEXSUBIMAGE3DPROC          pglTexSubImage3D          = nullptr;
 
 
+static void *GetAnyGLFuncAddress(const char *name)
+{
+#ifdef _WIN32
+    void *p = (void*)wglGetProcAddress(name);
+    if(!p)
+    {
+        static HMODULE ogl = GetModuleHandleA("opengl32.dll");
+        if(ogl) p = (void*)GetProcAddress(ogl, name);
+    }
+    return p;
+#else
+    return (void*)glXGetProcAddressARB((const GLubyte*)name);
+#endif
+}
+
 static void LoadGLExtensions()
 {
     if (gExtensionsLoaded) return;
-#ifdef _WIN32
-    #define LOAD_PROC(type, name) name = (type)wglGetProcAddress(#name);
-#else
-    #define LOAD_PROC(type, name) name = (type)glXGetProcAddressARB((const GLubyte*)#name);
-#endif
+#define LOAD_PROC(type, name) name = (type)GetAnyGLFuncAddress(#name);
 
     LOAD_PROC(PFNGLTEXIMAGE3DPROC, pglTexImage3D);
     LOAD_PROC(PFNGLTEXSUBIMAGE3DPROC, pglTexSubImage3D);
