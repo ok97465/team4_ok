@@ -108,6 +108,23 @@ uint32_t PopularColors[] = {
 
 }TMultiColor;
 
+static GLuint GetHexAddrDisplayList(TOpenGLPanel* panel, TADS_B_Aircraft* ac)
+{
+    if(ac->HexAddrList)
+        return ac->HexAddrList;
+
+    GLuint list = glGenLists(1);
+    if(list == 0)
+        return 0;
+
+    glNewList(list, GL_COMPILE);
+    panel->Draw2DText(ac->HexAddr);
+    glEndList();
+
+    ac->HexAddrList = list;
+    return list;
+}
+
 
 //---------------------------------------------------------------------------
 static const char * strnistr(const char * pszSource, DWORD dwLength, const char * pszFind)
@@ -242,11 +259,23 @@ __fastcall TForm1::~TForm1()
  delete g_EarthView;
  if (g_GETileManager) delete g_GETileManager;
  delete g_MasterLayer;
- delete g_Storage;
- if (LoadMapFromInternet)
- {
-   if (g_Keyhole) delete g_Keyhole;
- }
+  delete g_Storage;
+  if (LoadMapFromInternet)
+  {
+    if (g_Keyhole) delete g_Keyhole;
+  }
+
+  uint32_t *Key;
+  ght_iterator_t iterator;
+  TADS_B_Aircraft* Data;
+
+  for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
+                      Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
+  {
+    if(Data->HexAddrList)
+      glDeleteLists(Data->HexAddrList, 1);
+    delete Data;
+  }
 
 }
 //---------------------------------------------------------------------------
@@ -493,8 +522,10 @@ void __fastcall TForm1::DrawObjects(void)
 				line.y2 = ScrY2;
 				m_lineBatch.push_back(line);
 
-				glRasterPos2i(ScrX+30,ScrY-10);
-				ObjectDisplay->Draw2DText(Data->HexAddr);
+                                glRasterPos2i(ScrX+30,ScrY-10);
+                                GLuint txtList = GetHexAddrDisplayList(ObjectDisplay, Data);
+                                if(txtList)
+                                    glCallList(txtList);
         }
 	   }
 		DrawAirplaneLinesInstanced(m_lineBatch);
@@ -860,16 +891,18 @@ void __fastcall TForm1::Purge(void)
   for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
 			  Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
 	{
-	  if ((CurrentTime-Data->LastSeen)>=StaleTimeInMs)
-	  {
-	  p = ght_remove(HashTable,sizeof(*Key), Key);;
-	  if (!p)
-		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
+          if ((CurrentTime-Data->LastSeen)>=StaleTimeInMs)
+          {
+          p = ght_remove(HashTable,sizeof(*Key), Key);;
+          if (!p)
+                ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-	  delete Data;
+          if(Data->HexAddrList)
+            glDeleteLists(Data->HexAddrList, 1);
+          delete Data;
 
-	  }
-	}
+          }
+        }
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::Timer2Timer(TObject *Sender)
@@ -888,13 +921,15 @@ void __fastcall TForm1::PurgeButtonClick(TObject *Sender)
 			  Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
 	{
 
-	  p = ght_remove(HashTable,sizeof(*Key), Key);
-	  if (!p)
-		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
+          p = ght_remove(HashTable,sizeof(*Key), Key);
+          if (!p)
+                ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-	  delete Data;
+          if(Data->HexAddrList)
+            glDeleteLists(Data->HexAddrList, 1);
+          delete Data;
 
-	}
+        }
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::InsertClick(TObject *Sender)
@@ -1147,7 +1182,8 @@ void __fastcall TTCPClientRawHandleThread::HandleInput(void)
        ADS_B_Aircraft->HaveLatLon=false;
 	   ADS_B_Aircraft->HaveSpeedAndHeading=false;
 	   ADS_B_Aircraft->HaveFlightNum=false;
-	   ADS_B_Aircraft->SpriteImage=Form1->CurrentSpriteImage;
+          ADS_B_Aircraft->SpriteImage=Form1->CurrentSpriteImage;
+          ADS_B_Aircraft->HexAddrList=0;
 	   if (Form1->CycleImages->Checked)
 		 Form1->CurrentSpriteImage=(Form1->CurrentSpriteImage+1)%Form1->NumSpriteImages;
 	   if (ght_insert(Form1->HashTable,ADS_B_Aircraft,sizeof(addr), &addr) < 0)
