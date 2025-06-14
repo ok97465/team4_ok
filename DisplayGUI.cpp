@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <filesystem>
 #include <fileapi.h>
+#include <unordered_map>
+#include <string>
 
 
 #pragma hdrstop
@@ -107,6 +109,25 @@ uint32_t PopularColors[] = {
    };
 
 }TMultiColor;
+
+static std::unordered_map<std::string, GLuint> HexAddrDisplayLists;
+static GLuint GetHexAddrDisplayList(TOpenGLPanel* panel, const char* addr)
+{
+    auto it = HexAddrDisplayLists.find(addr);
+    if(it != HexAddrDisplayLists.end())
+        return it->second;
+
+    GLuint list = glGenLists(1);
+    if(list == 0)
+        return 0;
+
+    glNewList(list, GL_COMPILE);
+    panel->Draw2DText(addr);
+    glEndList();
+
+    HexAddrDisplayLists[addr] = list;
+    return list;
+}
 
 
 //---------------------------------------------------------------------------
@@ -493,8 +514,10 @@ void __fastcall TForm1::DrawObjects(void)
 				line.y2 = ScrY2;
 				m_lineBatch.push_back(line);
 
-				glRasterPos2i(ScrX+30,ScrY-10);
-				ObjectDisplay->Draw2DText(Data->HexAddr);
+                                glRasterPos2i(ScrX+30,ScrY-10);
+                                GLuint txtList = GetHexAddrDisplayList(ObjectDisplay, Data->HexAddr);
+                                if(txtList)
+                                    glCallList(txtList);
         }
 	   }
 		DrawAirplaneLinesInstanced(m_lineBatch);
