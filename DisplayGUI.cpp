@@ -129,6 +129,16 @@ static GLuint GetHexAddrDisplayList(TOpenGLPanel* panel, const char* addr)
     return list;
 }
 
+static void RemoveHexAddrDisplayList(const char* addr)
+{
+    auto it = HexAddrDisplayLists.find(addr);
+    if(it != HexAddrDisplayLists.end())
+    {
+        glDeleteLists(it->second, 1);
+        HexAddrDisplayLists.erase(it);
+    }
+}
+
 
 //---------------------------------------------------------------------------
 static const char * strnistr(const char * pszSource, DWORD dwLength, const char * pszFind)
@@ -263,11 +273,15 @@ __fastcall TForm1::~TForm1()
  delete g_EarthView;
  if (g_GETileManager) delete g_GETileManager;
  delete g_MasterLayer;
- delete g_Storage;
- if (LoadMapFromInternet)
- {
-   if (g_Keyhole) delete g_Keyhole;
- }
+  delete g_Storage;
+  if (LoadMapFromInternet)
+  {
+    if (g_Keyhole) delete g_Keyhole;
+  }
+
+  for(auto &p : HexAddrDisplayLists)
+    glDeleteLists(p.second, 1);
+  HexAddrDisplayLists.clear();
 
 }
 //---------------------------------------------------------------------------
@@ -883,16 +897,17 @@ void __fastcall TForm1::Purge(void)
   for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
 			  Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
 	{
-	  if ((CurrentTime-Data->LastSeen)>=StaleTimeInMs)
-	  {
-	  p = ght_remove(HashTable,sizeof(*Key), Key);;
-	  if (!p)
-		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
+          if ((CurrentTime-Data->LastSeen)>=StaleTimeInMs)
+          {
+          p = ght_remove(HashTable,sizeof(*Key), Key);;
+          if (!p)
+                ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-	  delete Data;
+          RemoveHexAddrDisplayList(Data->HexAddr);
+          delete Data;
 
-	  }
-	}
+          }
+        }
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::Timer2Timer(TObject *Sender)
@@ -911,13 +926,14 @@ void __fastcall TForm1::PurgeButtonClick(TObject *Sender)
 			  Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
 	{
 
-	  p = ght_remove(HashTable,sizeof(*Key), Key);
-	  if (!p)
-		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
+          p = ght_remove(HashTable,sizeof(*Key), Key);
+          if (!p)
+                ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-	  delete Data;
+          RemoveHexAddrDisplayList(Data->HexAddr);
+          delete Data;
 
-	}
+        }
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::InsertClick(TObject *Sender)
