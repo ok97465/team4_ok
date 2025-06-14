@@ -230,8 +230,10 @@ __fastcall TForm1::TForm1(TComponent* Owner)
  BigQueryFileCount=0;
  InitAircraftDB(AircraftDBPathFileName);
  m_planeBatch.reserve(5000);
- m_lineBatch.reserve(5000);
- printf("init complete\n");
+  m_lineBatch.reserve(5000);
+  SetHexTextScale(2.0f);
+  SetHexTextBold(true);
+  printf("init complete\n");
 }
 //---------------------------------------------------------------------------
 __fastcall TForm1::~TForm1()

@@ -40,7 +40,7 @@ void ComputeTimeToGoPosition(float  TimeToGo,
                                                          float  xs, float  ys,
                                                          float  xv, float  yv,
                                                          float &xe, float &ye);
- void DrawLines(DWORD resolution, double xpts[],double ypts[]);
+void DrawLines(DWORD resolution, double xpts[],double ypts[]);
 
 struct HexCharInstance {
     float x;
@@ -50,6 +50,8 @@ struct HexCharInstance {
 
 void InitHexTextInstancing();
 void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances);
+void SetHexTextScale(float scale);
+void SetHexTextBold(bool bold);
 
 //---------------------------------------------------------------------------
 #endif

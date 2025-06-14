@@ -64,9 +64,11 @@ struct HexTextResources {
     GLuint instanceVBO;
     GLuint texture;
     GLuint program;
+    float  scale;
+    int    bold;
 };
 
-static HexTextResources gHexText = {false,0,0,0,0,0};
+static HexTextResources gHexText = {false,0,0,0,0,0,1.0f,0};
 
 // OpenGL extension function pointers for systems with only GL 1.1 headers
 static bool gExtensionsLoaded = false;
@@ -82,6 +84,7 @@ static PFNGLACTIVETEXTUREPROC          pglActiveTexture          = nullptr;
 static PFNGLGETUNIFORMLOCATIONPROC     pglGetUniformLocation     = nullptr;
 static PFNGLUNIFORM1IPROC              pglUniform1i              = nullptr;
 static PFNGLUNIFORM2FPROC              pglUniform2f              = nullptr;
+static PFNGLUNIFORM1FPROC              pglUniform1f              = nullptr;
 static PFNGLGENVERTEXARRAYSPROC        pglGenVertexArrays        = nullptr;
 static PFNGLBINDVERTEXARRAYPROC        pglBindVertexArray        = nullptr;
 static PFNGLGENBUFFERSPROC             pglGenBuffers             = nullptr;
@@ -130,6 +133,7 @@ static void LoadGLExtensions()
     LOAD_PROC(PFNGLGETUNIFORMLOCATIONPROC, pglGetUniformLocation);
     LOAD_PROC(PFNGLUNIFORM1IPROC, pglUniform1i);
     LOAD_PROC(PFNGLUNIFORM2FPROC, pglUniform2f);
+    LOAD_PROC(PFNGLUNIFORM1FPROC, pglUniform1f);
     LOAD_PROC(PFNGLGENVERTEXARRAYSPROC, pglGenVertexArrays);
     LOAD_PROC(PFNGLBINDVERTEXARRAYPROC, pglBindVertexArray);
     LOAD_PROC(PFNGLGENBUFFERSPROC, pglGenBuffers);
@@ -700,9 +704,10 @@ void InitHexTextInstancing()
         "layout(location=2) in vec2 pos;\n"
         "layout(location=3) in int glyph;\n"
         "uniform vec2 Viewport;\n"
+        "uniform float Scale;\n"
         "out vec2 Tex;\n"
         "void main(){\n"
-        "  vec2 p = pos + vert;\n"
+        "  vec2 p = pos + vert * Scale;\n"
         "  vec2 ndc = vec2((p.x/Viewport.x)*2.0 - 1.0, (p.y/Viewport.y)*2.0 - 1.0);\n"
         "  gl_Position = vec4(ndc,0.0,1.0);\n"
         "  Tex = vec2((uv.x + glyph) / 16.0, uv.y);\n"
@@ -712,9 +717,17 @@ void InitHexTextInstancing()
         "#version 330 core\n"
         "in vec2 Tex;\n"
         "uniform sampler2D fontTex;\n"
+        "uniform vec2 Texel;\n"
+        "uniform int Bold;\n"
         "out vec4 Frag;\n"
         "void main(){\n"
         "  float a = texture(fontTex, Tex).r;\n"
+        "  if(Bold > 0){\n"
+        "    a = max(a, texture(fontTex, Tex + vec2(Texel.x,0)).r);\n"
+        "    a = max(a, texture(fontTex, Tex - vec2(Texel.x,0)).r);\n"
+        "    a = max(a, texture(fontTex, Tex + vec2(0,Texel.y)).r);\n"
+        "    a = max(a, texture(fontTex, Tex - vec2(0,Texel.y)).r);\n"
+        "  }\n"
         "  if(a < 0.1) discard;\n"
         "  Frag = vec4(1.0,1.0,1.0,a);\n"
         "}\n";
@@ -776,6 +789,8 @@ void InitHexTextInstancing()
     pglBindVertexArray(0);
 
     gHexText.initialized = true;
+    gHexText.scale = 1.0f;
+    gHexText.bold = 0;
 }
 
 void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances)
@@ -792,6 +807,10 @@ void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances)
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
     pglUniform2f(pglGetUniformLocation(gHexText.program, "Viewport"), (float)vp[2], (float)vp[3]);
+    pglUniform1f(pglGetUniformLocation(gHexText.program, "Scale"), gHexText.scale);
+    pglUniform1i(pglGetUniformLocation(gHexText.program, "Bold"), gHexText.bold);
+    pglUniform2f(pglGetUniformLocation(gHexText.program, "Texel"),
+                 1.0f/(float)(HEX_FONT_WIDTH*HEX_FONT_GLYPHS), 1.0f/(float)HEX_FONT_HEIGHT);
     pglActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gHexText.texture);
     pglUniform1i(pglGetUniformLocation(gHexText.program, "fontTex"), 0);
@@ -801,6 +820,16 @@ void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances)
     glBindTexture(GL_TEXTURE_2D, 0);
     pglBindVertexArray(0);
     pglUseProgram(0);
+}
+
+void SetHexTextScale(float scale)
+{
+    gHexText.scale = scale;
+}
+
+void SetHexTextBold(bool bold)
+{
+    gHexText.bold = bold ? 1 : 0;
 }
  #if 0
 //---------------------------------------------------------------------------
