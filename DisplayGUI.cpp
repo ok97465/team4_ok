@@ -507,7 +507,7 @@ void __fastcall TForm1::DrawObjects(void)
 
                                 for(int i=0; i<6 && Data->HexAddr[i]; ++i){
                                     HexCharInstance tc;
-                                    tc.x = ScrX + 30 + i*HEX_FONT_WIDTH;
+                                    tc.x = ScrX + 30 + i * HEX_FONT_WIDTH * GetHexTextScale();
                                     tc.y = ScrY - 10;
                                     char c = Data->HexAddr[i];
                                     if(c >= '0' && c <= '9') tc.glyph = c - '0';

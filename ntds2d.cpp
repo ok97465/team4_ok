@@ -829,6 +829,11 @@ void SetHexTextBold(bool bold)
 {
     gHexText.bold = bold ? 1 : 0;
 }
+
+float GetHexTextScale()
+{
+    return gHexText.scale;
+}
  #if 0
 //---------------------------------------------------------------------------
 // SAVE ORIGINAL CODE   ** DO NOT DELETE

@@ -52,6 +52,7 @@ void InitHexTextInstancing();
 void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances);
 void SetHexTextScale(float scale);
 void SetHexTextBold(bool bold);
+float GetHexTextScale();
 
 //---------------------------------------------------------------------------
 #endif
