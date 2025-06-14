@@ -473,8 +473,15 @@ void __fastcall TForm1::DrawObjects(void)
            inst.color[3]=color[3];
            planeBatch.push_back(inst);
 
+           if (!Data->HexTextListValid) {
+               Data->HexTextList = glGenLists(1);
+               glNewList(Data->HexTextList, GL_COMPILE);
+               ObjectDisplay->Draw2DText(Data->HexAddr);
+               glEndList();
+               Data->HexTextListValid = true;
+           }
            glRasterPos2i(ScrX+30,ScrY-10);
-           ObjectDisplay->Draw2DText(Data->HexAddr);
+           glCallList(Data->HexTextList);
 
 	   if ((Data->HaveSpeedAndHeading) && (TimeToGoCheckBox->State==cbChecked))
 	   {
@@ -859,8 +866,9 @@ void __fastcall TForm1::Purge(void)
 	  p = ght_remove(HashTable,sizeof(*Key), Key);;
 	  if (!p)
 		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
-
-	  delete Data;
+    if (Data->HexTextListValid)
+        glDeleteLists(Data->HexTextList,1);
+          delete Data;
 
 	  }
 	}
@@ -885,8 +893,9 @@ void __fastcall TForm1::PurgeButtonClick(TObject *Sender)
 	  p = ght_remove(HashTable,sizeof(*Key), Key);
 	  if (!p)
 		ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
-
-	  delete Data;
+    if (Data->HexTextListValid)
+        glDeleteLists(Data->HexTextList,1);
+    delete Data;
 
 	}
 }
@@ -1131,19 +1140,21 @@ void __fastcall TTCPClientRawHandleThread::HandleInput(void)
       }
     else
 	  {
-  	   ADS_B_Aircraft= new TADS_B_Aircraft;
-	   ADS_B_Aircraft->ICAO=addr;
-	   snprintf(ADS_B_Aircraft->HexAddr,sizeof(ADS_B_Aircraft->HexAddr),"%06X",(int)addr);
-	   ADS_B_Aircraft->NumMessagesSBS=0;
+           ADS_B_Aircraft= new TADS_B_Aircraft;
+           ADS_B_Aircraft->ICAO=addr;
+           snprintf(ADS_B_Aircraft->HexAddr,sizeof(ADS_B_Aircraft->HexAddr),"%06X",(int)addr);
+           ADS_B_Aircraft->NumMessagesSBS=0;
        ADS_B_Aircraft->NumMessagesRaw=0;
        ADS_B_Aircraft->VerticalRate=0;
-	   ADS_B_Aircraft->HaveAltitude=false;
+           ADS_B_Aircraft->HaveAltitude=false;
        ADS_B_Aircraft->HaveLatLon=false;
-	   ADS_B_Aircraft->HaveSpeedAndHeading=false;
-	   ADS_B_Aircraft->HaveFlightNum=false;
-	   ADS_B_Aircraft->SpriteImage=Form1->CurrentSpriteImage;
-	   if (Form1->CycleImages->Checked)
-		 Form1->CurrentSpriteImage=(Form1->CurrentSpriteImage+1)%Form1->NumSpriteImages;
+           ADS_B_Aircraft->HaveSpeedAndHeading=false;
+           ADS_B_Aircraft->HaveFlightNum=false;
+           ADS_B_Aircraft->SpriteImage=Form1->CurrentSpriteImage;
+           ADS_B_Aircraft->HexTextList=0;
+           ADS_B_Aircraft->HexTextListValid=false;
+           if (Form1->CycleImages->Checked)
+                 Form1->CurrentSpriteImage=(Form1->CurrentSpriteImage+1)%Form1->NumSpriteImages;
 	   if (ght_insert(Form1->HashTable,ADS_B_Aircraft,sizeof(addr), &addr) < 0)
 		  {
 			printf("ght_insert Error - Should Not Happen\n");
