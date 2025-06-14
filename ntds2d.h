@@ -37,10 +37,19 @@ void DrawTrackHook(float x, float y);
 void DrawRadarCoverage(float xc, float yc, float major, float minor);
 void DrawLeader(float x1, float y1, float x2, float y2);
 void ComputeTimeToGoPosition(float  TimeToGo,
-							 float  xs, float  ys,
-							 float  xv, float  yv,
-							 float &xe, float &ye);
+                                                         float  xs, float  ys,
+                                                         float  xv, float  yv,
+                                                         float &xe, float &ye);
  void DrawLines(DWORD resolution, double xpts[],double ypts[]);
+
+struct HexCharInstance {
+    float x;
+    float y;
+    int   glyph;
+};
+
+void InitHexTextInstancing();
+void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances);
 
 //---------------------------------------------------------------------------
 #endif

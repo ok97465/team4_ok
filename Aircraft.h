@@ -3,7 +3,6 @@
 #ifndef AircraftH
 #define AircraftH
 #include "DecodeRawADS_B.h"
-#include <gl/gl.h>
 
 #define MODES_NON_ICAO_ADDRESS       (1<<24) // Set on addresses to indicate they are not ICAO addresses
 
@@ -30,9 +29,8 @@ typedef struct
  bool                HaveSpeedAndHeading;
  double              Heading;
  double              Speed;
-    double              VerticalRate;
-    int                 SpriteImage;
-    GLuint              HexAddrList;
+ double              VerticalRate;
+ int                 SpriteImage;
 } TADS_B_Aircraft;
 
 

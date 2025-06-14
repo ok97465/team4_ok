@@ -27,6 +27,7 @@
 #include "AircraftDB.h"
 #include "csv.h"
 #include "MAPFactory.h"
+#include "hex_font.h"
 
 #define AIRCRAFT_DATABASE_URL   "https://opensky-network.org/datasets/metadata/aircraftDatabase.zip"
 #define AIRCRAFT_DATABASE_FILE   "aircraftDatabase.csv"
@@ -107,25 +108,6 @@ uint32_t PopularColors[] = {
    };
 
 }TMultiColor;
-
-static GLuint GetHexAddrDisplayList(TOpenGLPanel* panel, TADS_B_Aircraft* ac)
-{
-    if(ac->HexAddrList)
-        return ac->HexAddrList;
-
-    GLuint list = glGenLists(1);
-    if(list == 0)
-        return 0;
-
-    glNewList(list, GL_COMPILE);
-    panel->Draw2DText(ac->HexAddr);
-    glEndList();
-
-    ac->HexAddrList = list;
-    return list;
-}
-
-
 //---------------------------------------------------------------------------
 static const char * strnistr(const char * pszSource, DWORD dwLength, const char * pszFind)
 {
@@ -272,8 +254,6 @@ __fastcall TForm1::~TForm1()
   for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
                       Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
   {
-    if(Data->HexAddrList)
-      glDeleteLists(Data->HexAddrList, 1);
     delete Data;
   }
 
@@ -471,8 +451,9 @@ void __fastcall TForm1::DrawObjects(void)
 	 }
 
 	AircraftCountLabel->Caption=IntToStr((int)ght_size(HashTable));
-	m_planeBatch.clear();
-	m_lineBatch.clear();
+        m_planeBatch.clear();
+        m_lineBatch.clear();
+        m_textBatch.clear();
         for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
                           Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
         {
@@ -522,14 +503,21 @@ void __fastcall TForm1::DrawObjects(void)
 				line.y2 = ScrY2;
 				m_lineBatch.push_back(line);
 
-                                glRasterPos2i(ScrX+30,ScrY-10);
-                                GLuint txtList = GetHexAddrDisplayList(ObjectDisplay, Data);
-                                if(txtList)
-                                    glCallList(txtList);
+                                for(int i=0; i<6 && Data->HexAddr[i]; ++i){
+                                    HexCharInstance tc;
+                                    tc.x = ScrX + 30 + i*HEX_FONT_WIDTH;
+                                    tc.y = ScrY - 10;
+                                    char c = Data->HexAddr[i];
+                                    if(c >= '0' && c <= '9') tc.glyph = c - '0';
+                                    else if(c >= 'A' && c <= 'F') tc.glyph = 10 + (c - 'A');
+                                    else tc.glyph = 0;
+                                    m_textBatch.push_back(tc);
+                                }
         }
 	   }
-		DrawAirplaneLinesInstanced(m_lineBatch);
-		DrawAirplaneImagesInstanced(m_planeBatch);
+               DrawAirplaneLinesInstanced(m_lineBatch);
+               DrawAirplaneImagesInstanced(m_planeBatch);
+               DrawHexTextInstanced(m_textBatch);
 
  ViewableAircraftCountLabel->Caption=ViewableAircraft;
  if (TrackHook.Valid_CC)
@@ -897,8 +885,6 @@ void __fastcall TForm1::Purge(void)
           if (!p)
                 ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-          if(Data->HexAddrList)
-            glDeleteLists(Data->HexAddrList, 1);
           delete Data;
 
           }
@@ -925,8 +911,6 @@ void __fastcall TForm1::PurgeButtonClick(TObject *Sender)
           if (!p)
                 ShowMessage("Removing the current iterated entry failed! This is a BUG\n");
 
-          if(Data->HexAddrList)
-            glDeleteLists(Data->HexAddrList, 1);
           delete Data;
 
         }
@@ -1183,7 +1167,6 @@ void __fastcall TTCPClientRawHandleThread::HandleInput(void)
 	   ADS_B_Aircraft->HaveSpeedAndHeading=false;
 	   ADS_B_Aircraft->HaveFlightNum=false;
           ADS_B_Aircraft->SpriteImage=Form1->CurrentSpriteImage;
-          ADS_B_Aircraft->HexAddrList=0;
 	   if (Form1->CycleImages->Checked)
 		 Form1->CurrentSpriteImage=(Form1->CurrentSpriteImage+1)%Form1->NumSpriteImages;
 	   if (ght_insert(Form1->HashTable,ADS_B_Aircraft,sizeof(addr), &addr) < 0)

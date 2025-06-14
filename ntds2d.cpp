@@ -12,6 +12,7 @@
 #pragma hdrstop
 
 #include "ntds2d.h"
+#include "hex_font.h"
 #define RADPERDEG (asin(1.0f)/90.0f)
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -55,6 +56,17 @@ struct LineInstancingResources {
 
 static AirPlaneInstancingResources gInstancing = {false,0,0,0,0};
 static LineInstancingResources gLineInstancing = {false,0,0,0,0};
+
+struct HexTextResources {
+    bool initialized;
+    GLuint vao;
+    GLuint quadVBO;
+    GLuint instanceVBO;
+    GLuint texture;
+    GLuint program;
+};
+
+static HexTextResources gHexText = {false,0,0,0,0,0};
 
 // OpenGL extension function pointers for systems with only GL 1.1 headers
 static bool gExtensionsLoaded = false;
@@ -664,7 +676,7 @@ void DrawAirTrackUnknown(float x, float y)
 
  }
  //---------------------------------------------------------------------------
- void DrawLines(DWORD resolution, double xpts[],double ypts[])
+void DrawLines(DWORD resolution, double xpts[],double ypts[])
 {
   DWORD i;
 	glBegin(GL_LINES);
@@ -673,7 +685,122 @@ void DrawAirTrackUnknown(float x, float y)
 		glVertex3f(xpts[i], ypts[i], 0.1f);
 		glVertex3f(xpts[(i+1)%resolution], ypts[(i+1)%resolution], 0.1f);
 	}
-	glEnd();
+        glEnd();
+}
+
+void InitHexTextInstancing()
+{
+    LoadGLExtensions();
+    if(gHexText.initialized) return;
+
+    const char* vsSrc =
+        "#version 330 core\n"
+        "layout(location=0) in vec2 vert;\n"
+        "layout(location=1) in vec2 uv;\n"
+        "layout(location=2) in vec2 pos;\n"
+        "layout(location=3) in int glyph;\n"
+        "uniform vec2 Viewport;\n"
+        "out vec2 Tex;\n"
+        "void main(){\n"
+        "  vec2 p = pos + vert;\n"
+        "  vec2 ndc = vec2((p.x/Viewport.x)*2.0 - 1.0, (p.y/Viewport.y)*2.0 - 1.0);\n"
+        "  gl_Position = vec4(ndc,0.0,1.0);\n"
+        "  Tex = vec2((uv.x + glyph) / 16.0, uv.y);\n"
+        "}\n";
+
+    const char* fsSrc =
+        "#version 330 core\n"
+        "in vec2 Tex;\n"
+        "uniform sampler2D fontTex;\n"
+        "out vec4 Frag;\n"
+        "void main(){\n"
+        "  float a = texture(fontTex, Tex).r;\n"
+        "  if(a < 0.1) discard;\n"
+        "  Frag = vec4(1.0,1.0,1.0,a);\n"
+        "}\n";
+
+    gHexText.program = CreateProgram(vsSrc, fsSrc);
+
+    unsigned char atlas[HEX_FONT_HEIGHT][HEX_FONT_WIDTH*HEX_FONT_GLYPHS];
+    for(int g=0; g<HEX_FONT_GLYPHS; ++g){
+        for(int y=0; y<HEX_FONT_HEIGHT; ++y){
+            uint8_t row = HexFont8x8[g][y];
+            for(int x=0; x<HEX_FONT_WIDTH; ++x){
+                atlas[y][g*HEX_FONT_WIDTH+x] = (row & (0x80 >> x)) ? 255 : 0;
+            }
+        }
+    }
+
+    glGenTextures(1, &gHexText.texture);
+    glBindTexture(GL_TEXTURE_2D, gHexText.texture);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, HEX_FONT_WIDTH*HEX_FONT_GLYPHS, HEX_FONT_HEIGHT, 0,
+                 GL_RED, GL_UNSIGNED_BYTE, atlas);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    float quad[] = {
+        0.0f, 0.0f, 0.0f, 1.0f,
+        (float)HEX_FONT_WIDTH, 0.0f, 1.0f, 1.0f,
+        (float)HEX_FONT_WIDTH, (float)HEX_FONT_HEIGHT, 1.0f, 0.0f,
+        0.0f, (float)HEX_FONT_HEIGHT, 0.0f, 0.0f
+    };
+
+    pglGenVertexArrays(1, &gHexText.vao);
+    pglBindVertexArray(gHexText.vao);
+
+    pglGenBuffers(1, &gHexText.quadVBO);
+    pglBindBuffer(GL_ARRAY_BUFFER, gHexText.quadVBO);
+    pglBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    pglEnableVertexAttribArray(0);
+    pglVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+    pglEnableVertexAttribArray(1);
+    pglVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)(2*sizeof(float)));
+
+    pglGenBuffers(1, &gHexText.instanceVBO);
+    pglBindBuffer(GL_ARRAY_BUFFER, gHexText.instanceVBO);
+    pglBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STREAM_DRAW);
+
+    size_t stride = sizeof(HexCharInstance);
+    pglEnableVertexAttribArray(2);
+    pglVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(HexCharInstance, x));
+    pglVertexAttribDivisor(2, 1);
+    pglEnableVertexAttribArray(3);
+    pglVertexAttribIPointer(3, 1, GL_INT, stride, (void*)offsetof(HexCharInstance, glyph));
+    pglVertexAttribDivisor(3, 1);
+
+    pglBindBuffer(GL_ARRAY_BUFFER, 0);
+    pglBindVertexArray(0);
+
+    gHexText.initialized = true;
+}
+
+void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances)
+{
+    if(instances.empty()) return;
+    if(!gHexText.initialized)
+        InitHexTextInstancing();
+
+    pglBindVertexArray(gHexText.vao);
+    pglBindBuffer(GL_ARRAY_BUFFER, gHexText.instanceVBO);
+    pglBufferData(GL_ARRAY_BUFFER, instances.size()*sizeof(HexCharInstance), instances.data(), GL_STREAM_DRAW);
+
+    pglUseProgram(gHexText.program);
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    pglUniform2f(pglGetUniformLocation(gHexText.program, "Viewport"), (float)vp[2], (float)vp[3]);
+    pglActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gHexText.texture);
+    pglUniform1i(pglGetUniformLocation(gHexText.program, "fontTex"), 0);
+
+    pglDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances.size());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    pglBindVertexArray(0);
+    pglUseProgram(0);
 }
  #if 0
 //---------------------------------------------------------------------------
