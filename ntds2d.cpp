@@ -789,8 +789,6 @@ void InitHexTextInstancing()
     pglBindVertexArray(0);
 
     gHexText.initialized = true;
-    gHexText.scale = 1.0f;
-    gHexText.bold = 0;
 }
 
 void DrawHexTextInstanced(const std::vector<HexCharInstance>& instances)
