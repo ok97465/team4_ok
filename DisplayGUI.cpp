@@ -441,6 +441,7 @@ void __fastcall TForm1::DrawObjects(void)
 
     AircraftCountLabel->Caption=IntToStr((int)ght_size(HashTable));
         std::vector<AirplaneInstance> planeBatch;
+        std::vector<AirplaneLineInstance> lineBatch;
         for(Data = (TADS_B_Aircraft *)ght_first(HashTable, &iterator,(const void **) &Key);
                           Data; Data = (TADS_B_Aircraft *)ght_next(HashTable, &iterator, (const void **)&Key))
         {
@@ -470,29 +471,32 @@ void __fastcall TForm1::DrawObjects(void)
 					color[0]=1.0f; color[1]=0.0f; color[2]=0.0f; color[3]=1.0f;
 				}
 
-			AirplaneInstance inst;
-			inst.x=ScrX;
-			inst.y=ScrY;
-			inst.scale=1.5f;
-			inst.heading=Data->Heading;
-			inst.imageNum=Data->SpriteImage;
-			inst.color[0]=color[0];
-			inst.color[1]=color[1];
-			inst.color[2]=color[2];
-			inst.color[3]=color[3];
-			planeBatch.push_back(inst);
 
-			glRasterPos2i(ScrX+30,ScrY-10);
-			ObjectDisplay->Draw2DText(Data->HexAddr);
+                        AirplaneInstance inst;
+                        inst.x = ScrX;
+                        inst.y = ScrY;
+                        inst.scale = 1.5f;
+                        inst.heading = Data->Heading;
+                        inst.imageNum = Data->SpriteImage;
+                        inst.color[0] = color[0];
+                        inst.color[1] = color[1];
+                        inst.color[2] = color[2];
+                        inst.color[3] = color[3];
+                        planeBatch.push_back(inst);
 
-			glColor4f(1.0, 1.0, 0.0, 1.0);
-			glBegin(GL_LINE_STRIP);
-			glVertex2f(ScrX,ScrY);
-			glVertex2f(ScrX2,ScrY2);
-			glEnd();
+                        AirplaneLineInstance line;
+                        line.x1 = ScrX;
+                        line.y1 = ScrY;
+                        line.x2 = ScrX2;
+                        line.y2 = ScrY2;
+                        lineBatch.push_back(line);
+
+                        glRasterPos2i(ScrX+30,ScrY-10);
+                        ObjectDisplay->Draw2DText(Data->HexAddr);
         }
        }
         DrawAirplaneImagesInstanced(planeBatch);
+        DrawAirplaneLinesInstanced(lineBatch);
  ViewableAircraftCountLabel->Caption=ViewableAircraft;
  if (TrackHook.Valid_CC)
  {
