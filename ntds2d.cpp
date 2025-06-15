@@ -741,9 +741,10 @@ void InitHexTextInstancing()
     unsigned char atlas[HEX_FONT_HEIGHT][HEX_FONT_WIDTH*HEX_FONT_GLYPHS];
     for(int g=0; g<HEX_FONT_GLYPHS; ++g){
         for(int y=0; y<HEX_FONT_HEIGHT; ++y){
-            uint8_t row = HexFont8x8[g][y];
+            uint8_t row = HexFont8x8[g][y / HEX_FONT_SCALE];
             for(int x=0; x<HEX_FONT_WIDTH; ++x){
-                atlas[y][g*HEX_FONT_WIDTH+x] = (row & (0x80 >> x)) ? 255 : 0;
+                atlas[y][g*HEX_FONT_WIDTH + x] =
+                    (row & (0x80 >> (x / HEX_FONT_SCALE))) ? 255 : 0;
             }
         }
     }

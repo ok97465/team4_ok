@@ -231,7 +231,7 @@ __fastcall TForm1::TForm1(TComponent* Owner)
  InitAircraftDB(AircraftDBPathFileName);
  m_planeBatch.reserve(5000);
   m_lineBatch.reserve(5000);
-  SetHexTextScale(3.0f);
+  SetHexTextScale(1.0f);
   SetHexTextBold(true);
   printf("init complete\n");
 }

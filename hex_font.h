@@ -3,9 +3,12 @@
 #include <cstdint>
 
 #define HEX_FONT_GLYPHS 16
-#define HEX_FONT_WIDTH 8
-#define HEX_FONT_HEIGHT 8
+#define HEX_FONT_SCALE 3
+#define HEX_FONT_BASE_WIDTH 8
+#define HEX_FONT_BASE_HEIGHT 8
+#define HEX_FONT_WIDTH (HEX_FONT_BASE_WIDTH * HEX_FONT_SCALE)
+#define HEX_FONT_HEIGHT (HEX_FONT_BASE_HEIGHT * HEX_FONT_SCALE)
 
-extern const uint8_t HexFont8x8[HEX_FONT_GLYPHS][HEX_FONT_HEIGHT];
+extern const uint8_t HexFont8x8[HEX_FONT_GLYPHS][HEX_FONT_BASE_HEIGHT];
 
 #endif
