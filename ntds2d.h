@@ -46,6 +46,7 @@ struct HexCharInstance {
     float x;
     float y;
     int   glyph;
+    float color[4];
 };
 
 void InitHexTextInstancing();

@@ -231,7 +231,7 @@ __fastcall TForm1::TForm1(TComponent* Owner)
  InitAircraftDB(AircraftDBPathFileName);
  m_planeBatch.reserve(5000);
   m_lineBatch.reserve(5000);
-  SetHexTextScale(2.0f);
+  SetHexTextScale(3.0f);
   SetHexTextBold(true);
   printf("init complete\n");
 }
@@ -513,6 +513,10 @@ void __fastcall TForm1::DrawObjects(void)
                                     if(c >= '0' && c <= '9') tc.glyph = c - '0';
                                     else if(c >= 'A' && c <= 'F') tc.glyph = 10 + (c - 'A');
                                     else tc.glyph = 0;
+                                    tc.color[0] = color[0];
+                                    tc.color[1] = color[1];
+                                    tc.color[2] = color[2];
+                                    tc.color[3] = color[3];
                                     m_textBatch.push_back(tc);
                                 }
         }

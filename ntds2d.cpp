@@ -703,19 +703,23 @@ void InitHexTextInstancing()
         "layout(location=1) in vec2 uv;\n"
         "layout(location=2) in vec2 pos;\n"
         "layout(location=3) in int glyph;\n"
+        "layout(location=4) in vec4 color;\n"
         "uniform vec2 Viewport;\n"
         "uniform float Scale;\n"
         "out vec2 Tex;\n"
+        "out vec4 Col;\n"
         "void main(){\n"
         "  vec2 p = pos + vert * Scale;\n"
         "  vec2 ndc = vec2((p.x/Viewport.x)*2.0 - 1.0, (p.y/Viewport.y)*2.0 - 1.0);\n"
         "  gl_Position = vec4(ndc,0.0,1.0);\n"
         "  Tex = vec2((uv.x + glyph) / 16.0, uv.y);\n"
+        "  Col = color;\n"
         "}\n";
 
     const char* fsSrc =
         "#version 330 core\n"
         "in vec2 Tex;\n"
+        "in vec4 Col;\n"
         "uniform sampler2D fontTex;\n"
         "uniform vec2 Texel;\n"
         "uniform int Bold;\n"
@@ -729,7 +733,7 @@ void InitHexTextInstancing()
         "    a = max(a, texture(fontTex, Tex - vec2(0,Texel.y)).r);\n"
         "  }\n"
         "  if(a < 0.1) discard;\n"
-        "  Frag = vec4(1.0,1.0,1.0,a);\n"
+        "  Frag = vec4(Col.rgb, a * Col.a);\n"
         "}\n";
 
     gHexText.program = CreateProgram(vsSrc, fsSrc);
@@ -781,9 +785,14 @@ void InitHexTextInstancing()
     pglEnableVertexAttribArray(2);
     pglVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(HexCharInstance, x));
     pglVertexAttribDivisor(2, 1);
+
     pglEnableVertexAttribArray(3);
     pglVertexAttribIPointer(3, 1, GL_INT, stride, (void*)offsetof(HexCharInstance, glyph));
     pglVertexAttribDivisor(3, 1);
+
+    pglEnableVertexAttribArray(4);
+    pglVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(HexCharInstance, color));
+    pglVertexAttribDivisor(4, 1);
 
     pglBindBuffer(GL_ARRAY_BUFFER, 0);
     pglBindVertexArray(0);
